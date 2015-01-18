@@ -4,13 +4,17 @@ output:
   html_document:
     keep_md: true
 ---
-
+```{r, echo=TRUE}
   options(warn=-1)
   library(ggplot2)
   library(plyr)
   options(warn=0)
+```
 
 ## Loading and preprocessing the data
+
+```{r, echo=TRUE}
+  setwd("C:/Users/elarsen/Coursera work")
   data<-read.csv("reproducible research/activity.csv")
   
   ##get the set of dates and intervals measured
@@ -23,32 +27,47 @@ output:
   dmean<-tapply(data$steps,data$date,mean, na.rm=TRUE)
   dmedian<-tapply(data$steps,data$date,median, na.rm=TRUE)
   dailydata<-data.frame(dates, dtot, dmean, dmedian, na.rm=TRUE)
+```
 
-   qplot(dtot, binwidth=800)
+```{r, echo=FALSE}
+
+  qplot(dtot, binwidth=800)
+```
+
+
+```{r, echo=FALSE}
 
 ## Calculated totals by interval and make a tidy table
   itot<-tapply(data$steps,data$interval,sum, na.rm=TRUE)
   imean<-tapply(data$steps,data$interval,mean, na.rm=TRUE)
   imedian<-tapply(data$steps,data$interval,median, na.rm=TRUE)
   intdata<-data.frame(intervals, itot, imean, imedian)
-
+```
 
 ## What is mean total number of steps taken per day?
+```{r, echo=FALSE}
 
    qplot(intdata$interval, imean)
-  ## order by the average steps per interval desc and display the interval
+```
+
+
+```{r, echo=FALSE}
+
+## order by the average steps per interval desc and display the interval
   intdata<-arrange(intdata, desc(imean))
   
   intdata[1,1]
   
   ## Count the NAs
   totna<-sum(is.na(data$steps))
+```
 
 xdata<-xtabs(steps~date + interval, data=data)
 
 
 ## What is the average daily activity pattern?
 
+```{r, echo=FALSE}
 
 
 ## Imputing missing values
@@ -63,13 +82,40 @@ for (i in 1:dim(data)[1]){
 ## Calculated totals by day and make a tidy table
   dtot2<-tapply(data2$steps,data2$date,sum)
   dmean2<-tapply(data2$steps,data2$date,mean, na.rm=TRUE)
-  dmedian2<-tapply(data2$steps,data2$date,median, na.rm=TRUE)
-  dailydata2<-data.frame(dates, dtot2 dmean2, dmedian2, na.rm=TRUE)
+dmedian2<-tapply(data2$steps,data2$date,median, na.rm=TRUE)
+
+  dailydata2<-data.frame(dates, dtot2, dmean2, dmedian2, na.rm=TRUE)
 
    qplot(dtot2, binwidth=800)
   
-  summary(data)
-  summary(data2)
+ summary(dmean)[3:4]
+ summary(dmean2)[3:4]
   
   
 ## Are there differences in activity patterns between weekdays and weekends?
+day<-vector(length=dim(data)[1])
+for (i in 1:dim(data)[1]){
+
+  if(weekdays(as.Date(data2$date[i]))=="Saturday"){
+    day[i]<-"weekend"
+    }
+  else if(weekdays(as.Date(data2$date[i]))=="Sunday"){
+    day[i]<-"weekend"
+    }
+  
+  else{
+    day[i]<-"weekday"
+    }
+}
+data3<-cbind(data2,day)
+
+ g<-ggplot(data3, aes(x=interval,y=steps, day))
+ ## g<- g+stat_summary(fun.y="mean", geom="point", size=3,color="red")
+  g<- g+stat_summary(fun.y="sum", geom="line", size=1,color="limegreen")
+  g<- g+labs(title="Weekday versus Weekend Activity \nby Time of Day")
+  g<- g+labs(y="Number of Steps")
+  g<- g+facet_grid(day~.)
+  print(g)
+```
+
+
