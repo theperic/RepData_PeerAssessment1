@@ -12,6 +12,7 @@ output:
 ```
 
 ## Loading and preprocessing the data
+The following code was used to loade the data:
 
 ```{r, echo=TRUE}
   setwd("C:/Users/elarsen/Coursera work")
@@ -29,13 +30,20 @@ output:
   dailydata<-data.frame(dates, dtot, dmean, dmedian, na.rm=TRUE)
 ```
 
-```{r, echo=FALSE}
 
-  qplot(dtot, binwidth=800)
+## What is mean total number of steps taken per day?
+
+
+```{r, echo=TRUE}
+
+  qplot(dtot, binwidth=800, main="Total Steps per Day Distribution", xlab="Total Steps")
+
+  summary(dmean)[3:5]
+
+
 ```
 
-
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 
 ## Calculated totals by interval and make a tidy table
   itot<-tapply(data$steps,data$interval,sum, na.rm=TRUE)
@@ -44,31 +52,43 @@ output:
   intdata<-data.frame(intervals, itot, imean, imedian)
 ```
 
-## What is mean total number of steps taken per day?
-```{r, echo=FALSE}
 
-   qplot(intdata$interval, imean)
-```
+The highest number of steps on average occur during the following interval:
 
-
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 
 ## order by the average steps per interval desc and display the interval
   intdata<-arrange(intdata, desc(imean))
   
   intdata[1,1]
   
-  ## Count the NAs
-  totna<-sum(is.na(data$steps))
 ```
 
-xdata<-xtabs(steps~date + interval, data=data)
 
 
 ## What is the average daily activity pattern?
+```{r, echo=TRUE}
 
-```{r, echo=FALSE}
+  g<-ggplot(data, aes(x=interval,y=steps))
+  g<- g+stat_summary(fun.y="sum", geom="line", size=1,color="limegreen")
+  g<- g+labs(title="Activity Timeline")
+  g<- g+labs(y="Number of Steps")
+  print(g)
+```
 
+A significant number of values were missing in the data set:
+```{r, echo=TRUE}
+
+  ## Count the NAs
+  totna<-sum(is.na(data$steps))
+  
+  print(totna)
+
+```
+
+The missing data was filled by taking the average steps for the same interval on other days.  As shown below this had minimal overall impact on averages, but may affect the weekend/weekday pattern as some days were entirely NA (such as the first day) and this method will make them entirely "average".  Still this seemed less disruptive than implanting non time of day sensitive estimates.
+
+```{r, echo=TRUE}
 
 ## Imputing missing values
 ## replaces NAs with average value for that time interval from other days.
@@ -82,17 +102,34 @@ for (i in 1:dim(data)[1]){
 ## Calculated totals by day and make a tidy table
   dtot2<-tapply(data2$steps,data2$date,sum)
   dmean2<-tapply(data2$steps,data2$date,mean, na.rm=TRUE)
-dmedian2<-tapply(data2$steps,data2$date,median, na.rm=TRUE)
+  dmedian2<-tapply(data2$steps,data2$date,median, na.rm=TRUE)
 
   dailydata2<-data.frame(dates, dtot2, dmean2, dmedian2, na.rm=TRUE)
 
-   qplot(dtot2, binwidth=800)
   
- summary(dmean)[3:4]
- summary(dmean2)[3:4]
-  
+```
+
+The modified histogram was minimally impacted.
+
+```{r, echo=TRUE}
+
+  qplot(dtot2, binwidth=800, main="Total Steps per Day Distribution\n (Data holes filled)", xlab="")
+```
+
+With the method of filling in the missing data the averages are not impacted, though the quartiles are. The unmodifed and completed data profiels are below:
+
+```{r, echo=TRUE}
+
+  summary(dmean)[3:5]
+  summary(dmean2)[3:5]
+```
   
 ## Are there differences in activity patterns between weekdays and weekends?
+
+As shown in the plot below, the activity level on weekdays is substantially higher:
+
+```{r, echo=TRUE}
+
 day<-vector(length=dim(data)[1])
 for (i in 1:dim(data)[1]){
 
